@@ -33,10 +33,16 @@ export default function PatientsLayout() {
               backgroundColor: COLORS.primary,
             },
             headerTintColor: COLORS.white,
-            headerTitleStyle: {
-              fontWeight: "600",
-            },
-            headerTitle: "Patients",
+
+            /* ✅ CLICKABLE TITLE */
+            headerTitle: () => (
+              <Pressable
+                onPress={() => router.replace("/patients")}
+              >
+                <Text style={styles.headerTitle}>Patients</Text>
+              </Pressable>
+            ),
+
             headerRight: () => (
               <View style={{ marginRight: 10 }}>
                 {/* PROFILE BUTTON */}
@@ -72,6 +78,11 @@ export default function PatientsLayout() {
 }
 
 const styles = StyleSheet.create({
+  headerTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
+  },
   profileBtn: {
     flexDirection: "row",
     alignItems: "center",
