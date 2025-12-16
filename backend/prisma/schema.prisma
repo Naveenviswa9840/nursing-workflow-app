@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int     @id @default(autoincrement())
+  name     String
+  mobile   String  @unique
+  password String?
+  role     String? @default("Nurse")
+
+  notes Note[] @relation("UserNotes")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OTP {
+  id        Int      @id @default(autoincrement())
+  mobile    String
+  code      String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Patient {
+  id             Int      @id @default(autoincrement())
+  name           String
+  age            Int?
+  gender         Gender
+  mobile         String?  @unique
+  address        String?
+  admittedAt     DateTime @default(now())
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  vitals         Vitals[]
+  notes          Note[]
+  documents      Document[]
+  investigations Investigation[]
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+
+model Vitals {
+  id               Int      @id @default(autoincrement())
+  patientId        Int
+  bloodPressureSys Int?
+  bloodPressureDia Int?
+  temperature      Float?
+  spo2             Int?
+  pulseRate        Int?
+  respiratoryRate  Int?
+  weight           Float?
+  recordedAt       DateTime @default(now())
+  isCritical       Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model Note {
+  id        Int      @id @default(autoincrement())
+  patientId Int
+  content   String
+  createdAt DateTime @default(now())
+
+  staff   User    @relation("UserNotes", fields: [staffId], references: [id])
+  staffId Int
+  Patient Patient @relation(fields: [patientId], references: [id])
+}
+
+model Document {
+  id         Int      @id @default(autoincrement())
+  patientId  Int
+  fileName   String
+  filePath   String
+  fileType   String
+  uploadedAt DateTime @default(now())
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model Investigation {
+  id         Int                 @id @default(autoincrement())
+  patientId  Int
+  testName   String
+  status     InvestigationStatus @default(PENDING)
+  reportFile String?
+  comments   String?
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+enum InvestigationStatus {
+  PENDING
+  COMPLETED
+}
+
