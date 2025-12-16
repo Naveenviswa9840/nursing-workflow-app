@@ -1,6 +1,6 @@
 import { View, Text, FlatList, Dimensions } from "react-native";
-import { useEffect, useState } from "react";
-import { useLocalSearchParams } from "expo-router";
+import { useEffect, useState, useCallback } from "react";
+import { useLocalSearchParams,useFocusEffect } from "expo-router";
 import axios from "axios";
 import { BASE_URL } from "../../../src/config/api";
 import Toast from "react-native-toast-message";
@@ -35,9 +35,15 @@ export default function VitalsHistoryScreen() {
     }
   };
 
-  useEffect(() => {
-    loadVitals();
-  }, []);
+    useFocusEffect(
+    useCallback(() => {
+      loadVitals();
+      
+      return () => {
+      };
+    }, [patientId]) 
+ );
+
 
   // 🔴🔵🟢 Prepare chart data (last 6 records)
   const recent = vitals.slice(0, 6).reverse();

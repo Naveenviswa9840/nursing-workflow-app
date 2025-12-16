@@ -6,10 +6,12 @@ import {
   Pressable,
   StyleSheet,
 } from "react-native";
-import { useEffect, useState } from "react";
-import { useLocalSearchParams } from "expo-router";
+import { useEffect, useState, useCallback } from "react";
+import { useLocalSearchParams,useFocusEffect } from "expo-router";
 import { getNotes, addNote } from "../../../src/api/notes";
 import Toast from "react-native-toast-message";
+
+// ... (rest of your imports)
 
 const COLORS = {
   primary: "#C62828",
@@ -21,13 +23,19 @@ const COLORS = {
 
 export default function NotesScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const patientId = Number(id);
+ const patientId = id ? Number(id) : NaN;
 
   const [notes, setNotes] = useState<any[]>([]);
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
 
   const loadNotes = async () => {
+    if (isNaN(patientId) || patientId <= 0) {
+        // You could also use router.back() or router.replace() here if 
+        // a patient ID is mandatory for this screen.
+        Toast.show({ type: "error", text1: "Invalid Patient ID Detected" });
+        return; 
+    }
     try {
       const res = await getNotes(patientId);
       setNotes(res.data);
@@ -62,9 +70,14 @@ export default function NotesScreen() {
     }
   };
 
-  useEffect(() => {
-    loadNotes();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadNotes();
+      
+      return () => {
+      };
+    }, [patientId]) 
+ );
 
   return (
     <View style={styles.container}>
