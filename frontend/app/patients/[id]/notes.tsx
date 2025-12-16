@@ -31,8 +31,6 @@ export default function NotesScreen() {
 
   const loadNotes = async () => {
     if (isNaN(patientId) || patientId <= 0) {
-        // You could also use router.back() or router.replace() here if 
-        // a patient ID is mandatory for this screen.
         Toast.show({ type: "error", text1: "Invalid Patient ID Detected" });
         return; 
     }
