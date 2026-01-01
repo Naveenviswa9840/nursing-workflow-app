@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet } from "react-native";
-import { useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useLocalSearchParams, useFocusEffect } from "expo-router";
+import { useState, useCallback } from "react";
 import { authApi } from "../../../src/config/axiosAuth";
 
 const COLORS = {
@@ -13,15 +13,27 @@ const COLORS = {
 
 export default function PatientOverview() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const patientId = id ? Number(id) : NaN;
+          console.log("Loading patient with ID:", patientId);
+
   const [patient, setPatient] = useState<any>(null);
 
-  useEffect(() => {
-    loadPatient();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadPatient();
+
+      return () => {
+        // no-op cleanup
+      };
+    }, [patientId])
+  );
 
   const loadPatient = async () => {
+
+    if (isNaN(patientId) || patientId <= 0) return;
+    
     try {
-      const res = await authApi.get(`/patients/${id}`);
+      const res = await authApi.get(`/patients/${patientId}`);
       setPatient(res.data);
     } catch (err) {
       console.log("ERROR loading patient:", err);

@@ -5,9 +5,10 @@ import {
   FlatList,
   Pressable,
   StyleSheet,
+  Platform,
 } from "react-native";
-import { useState, useEffect } from "react";
-import { useLocalSearchParams } from "expo-router";
+import { useState, useCallback } from "react";
+import { useLocalSearchParams, useFocusEffect } from "expo-router";
 import { authApi } from "../../../src/config/axiosAuth";
 import { BASE_URL } from "../../../src/config/api";
 import * as Linking from "expo-linking";
@@ -21,49 +22,78 @@ const COLORS = {
 
 export default function DocumentsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const patientId = id ? Number(id) : NaN;
   const [docs, setDocs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   // ✅ Load documents
   const loadDocs = async () => {
-    if (!id) return;
-    const res = await authApi.get(`/patients/${id}/documents`);
+    if (isNaN(patientId) || patientId <= 0) return;
+    const res = await authApi.get(`/patients/${patientId}/documents`);
     setDocs(res.data);
   };
 
   // ✅ Upload document
   const uploadFile = async () => {
-    if (!id) return;
+  if (isNaN(patientId) || patientId <= 0) return;
 
-    const result = await DocumentPicker.getDocumentAsync({
-      copyToCacheDirectory: true,
-    });
+  const result = await DocumentPicker.getDocumentAsync({
+    copyToCacheDirectory: true,
+  });
 
-    if (result.canceled) return;
+  if (result.canceled) return;
 
-    const file = result.assets[0];
-    const formData = new FormData();
+  const picked = result.assets[0];
+  const formData = new FormData();
 
+  // 🔥 WEB FIX: convert URI → Blob
+  if (Platform.OS === "web") {
+    const response = await fetch(picked.uri);
+    const blob = await response.blob();
+
+    formData.append("file", new File([blob], picked.name!, {
+      type: picked.mimeType || blob.type,
+    }));
+  } else {
+    // ✅ Mobile (Android/iOS)
     formData.append("file", {
-      uri: file.uri,
-      name: file.name,
-      type: file.mimeType || "application/octet-stream",
+      uri: picked.uri,
+      name: picked.name,
+      type: picked.mimeType || "application/octet-stream",
     } as any);
+  }
 
+  try {
     setLoading(true);
 
     await authApi.post(
-      `/patients/${id}/documents/upload`,
-      formData
+      `/patients/${patientId}/documents/upload`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
     );
 
+    loadDocs();
+  } catch (err) {
+    console.error("Upload error:", err);
+  } finally {
     setLoading(false);
-    loadDocs();
-  };
+  }
+};
 
-  useEffect(() => {
-    loadDocs();
-  }, [id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadDocs();
+
+      return () => {
+        // cleanup if needed
+      };
+    }, [patientId])
+  );
 
   const openDocument = (docId: number) => {
     const url = `${BASE_URL}/patients/${id}/documents/${docId}/view`;

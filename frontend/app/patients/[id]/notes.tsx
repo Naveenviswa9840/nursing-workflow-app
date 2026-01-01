@@ -24,6 +24,8 @@ const COLORS = {
 export default function NotesScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
  const patientId = id ? Number(id) : NaN;
+ console.log("Patient ID:", patientId);
+ 
 
   const [notes, setNotes] = useState<any[]>([]);
   const [content, setContent] = useState("");

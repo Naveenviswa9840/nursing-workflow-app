@@ -1,6 +1,6 @@
 import { View, Text, TextInput, FlatList, Pressable, StyleSheet } from "react-native";
-import { useEffect, useState } from "react";
-import { useLocalSearchParams } from "expo-router";
+import { useState, useCallback } from "react";
+import { useLocalSearchParams, useFocusEffect } from "expo-router";
 import Toast from "react-native-toast-message";
 import {
   getInvestigations,
@@ -31,6 +31,7 @@ export default function InvestigationsScreen() {
   }
 
   const loadInvestigations = async () => {
+    if (isNaN(patientId) || patientId <= 0) return;
     try {
       const res = await getInvestigations(patientId);
       setList(res.data);
@@ -62,9 +63,13 @@ export default function InvestigationsScreen() {
     loadInvestigations();
   };
 
-  useEffect(() => {
-    loadInvestigations();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadInvestigations();
+
+      return () => {};
+    }, [patientId])
+  );
 
   return (
     <View style={styles.container}>
