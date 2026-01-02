@@ -30,7 +30,7 @@ export class AuthService {
 
     return {
       success: true,
-      otp, // ❗ For development only — remove later
+      otp, 
     };
   }
   async register(data: { name: string; mobile: string; role: string }) {
