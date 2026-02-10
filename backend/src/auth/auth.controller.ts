@@ -4,7 +4,7 @@ import { AuthService } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}   // <-- FIXED
+  constructor(private readonly authService: AuthService) {}   
 
   @Post('send-otp')
   sendOtp(@Body() body: { mobile: string }) {
@@ -18,7 +18,7 @@ export class AuthController {
 
   @Post('register')
   register(@Body() body: any) {
-    return this.authService.register(body);   // <-- Now works
+    return this.authService.register(body);   
   }
   
   @Get('me')
